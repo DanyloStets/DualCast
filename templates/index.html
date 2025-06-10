@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Статистика пристроїв</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <h1>Статистика з пристроїв</h1>
+  <div class="chart-container">
+    <h2>Кількість пакетів по MAC-адресах</h2>
+    <canvas id="macChart"></canvas>
+  </div>
+
+  <div class="chart-container">
+    <h2>Температура по часу</h2>
+    <canvas id="tempChart"></canvas>
+  </div>
+
+  <h2>Останні дані з пристроїв</h2>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Час</th>
+        <th>Пристрій</th>
+        <th>Температура</th>
+        <th>Тиск</th>
+        <th>Вологість</th>
+        <th>Дистанція</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function loadMacStats() {
+      try {
+        const res = await fetch('http://localhost:5000/api/mac-stats');
+        const data = await res.json();
+
+        const labels = data.map(item => item.mac);
+        const counts = data.map(item => item.count);
+
+        new Chart(document.getElementById('macChart').getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Кількість пакетів',
+              data: counts,
+              backgroundColor: 'rgba(54, 162, 235, 0.7)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Кількість'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'MAC Адреса'
+                }
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Помилка при завантаженні MAC-даних:', error);
+      }
+    }
+
+    async function loadSensorData() {
+      try {
+        const res = await fetch('http://localhost:5000/api/lora');
+        const data = await res.json();
+
+        const labels = [];
+        const temps = [];
+        const presses = [];
+        const hums = [];
+        const dists = [];
+
+        const tableBody = document.querySelector('#dataTable tbody');
+        tableBody.innerHTML = '';
+
+        data.forEach(entry => {
+          const time = entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString() : '—';
+
+          const tempVal = entry.temp ?? null;
+          const pressVal = entry.press ?? null;
+          const humVal = entry.hum ?? null;
+          const distVal = entry.dist ?? null;
+
+          const temp = tempVal ? parseFloat(String(tempVal).replace(/[^\d.-]/g, '')) : null;
+          const press = pressVal ? parseFloat(String(pressVal).replace(/[^\d.-]/g, '')) : null;
+          const hum = humVal ? parseFloat(String(humVal).replace(/[^\d.-]/g, '')) : null;
+          const dist = distVal ? parseFloat(String(distVal).replace(/[^\d.-]/g, '')) : null;
+
+          if (temp !== null && !isNaN(temp)) {
+            labels.push(time);
+            temps.push(temp);
+          }
+
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${time}</td>
+            <td>${entry.device_id ?? '—'}</td>
+            <td>${tempVal ?? '—'}</td>
+            <td>${pressVal ?? '—'}</td>
+            <td>${humVal ?? '—'}</td>
+            <td>${distVal ?? '—'}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        new Chart(document.getElementById('tempChart').getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Температура (°C)',
+              data: temps,
+              borderColor: 'rgba(255, 99, 132, 1)',
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              tension: 0.2,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                title: {
+                  display: true,
+                  text: 'Температура (°C)'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Час'
+                }
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Помилка при завантаженні сенсорних даних:', error);
+      }
+    }
+
+    
+    loadMacStats();
+    loadSensorData();
+  </script>
+
+</body>
+</html>
+
+

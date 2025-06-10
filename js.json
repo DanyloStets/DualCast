@@ -1,0 +1,21 @@
+{
+    "mac": "F0:AB:CD:12:34:56",
+    "rssi": -72,
+    "temp": "24.6",
+    "press": "1009.2",
+    "hum": "65.1",
+    "dist": "133",
+    "device_id": "A1"
+}
+
+{
+    id: 1,
+    mac: F0:AB:CD:12:34:56,
+    rssi: -72,
+    temp: 24.6,
+    press: 1009.2,
+    hum: 65.1,
+    dist: 133,
+    device_id: A1,
+    timestamp: 2025-06-01T12:04:14.651+00:00
+}
