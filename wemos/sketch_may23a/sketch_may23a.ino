@@ -16,20 +16,21 @@ void setup() {
   delay(2000);
   while (!Serial);
 
+
   WiFi.begin(ssid, password);
-  Serial.print("Підключення до Wi-Fi");
+  Serial.print("Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nWi-Fi з'єднано! IP: " + WiFi.localIP().toString());
+  Serial.println("\nWi-Fi  IP: " + WiFi.localIP().toString());
 
   LoRa.setPins(SS, RST, DIO0);
   if (!LoRa.begin(433E6)) {
-    Serial.println("Помилка ініціалізації LoRa!");
+    Serial.println("LoRa!");
     while (1);
   }
-  Serial.println("LoRa готова");
+  Serial.println("LoRa r");
 }
 
 void loop() {
@@ -40,9 +41,8 @@ void loop() {
       message += (char)LoRa.read();
     }
 
-    Serial.println("Прийнято по LoRa: " + message);
+    Serial.println(" LoRa: " + message);
 
-    // ----- Парсимо отримане повідомлення -----
     String mac = extractValue(message, "MAC:", " ");
     String rssi = extractValue(message, "RSSI:", " ");
     String dist = extractValue(message, "DIST:", " ");
@@ -51,7 +51,7 @@ void loop() {
     String hum = extractValue(message, "HUM:", " ");
     String device_id = extractValue(message, "DEVICE_ID:", " ");
 
-    // ----- Формуємо JSON -----
+ 
     String jsonData = "{";
     bool first = true;
 
@@ -95,7 +95,7 @@ void loop() {
 
     Serial.println("Відправка JSON: " + jsonData);
 
-    // ----- Надсилаємо на сервер -----
+    
     if (WiFi.status() == WL_CONNECTED) {
       WiFiClient client;
       HTTPClient http;
@@ -119,7 +119,6 @@ void loop() {
   }
 }
 
-// ----- Функція для витягу значень -----
 String extractValue(String data, String key, String delimiter) {
   int start = data.indexOf(key);
   if (start == -1) return "";
